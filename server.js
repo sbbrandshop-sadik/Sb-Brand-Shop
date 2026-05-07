@@ -21,6 +21,7 @@ if (!fs.existsSync(uploadDir)) {
 app.use("/uploads", express.static("uploads"));
 
 // ================= MONGO DB CONNECT =================
+// আপনার ডাটাবেজ লিঙ্কটি এখানে রাখা হয়েছে
 mongoose.connect("mongodb+srv://Admin:sadik88007@cluster0.1rhiqfe.mongodb.net/sbbrandshop")
   .then(() => console.log("MongoDB Connected Successfully"))
   .catch(err => console.error("DB Connection Error:", err));
@@ -45,14 +46,13 @@ const productSchema = new mongoose.Schema({
 });
 const Product = mongoose.model("Product", productSchema);
 
-// অর্ডারের স্কিমা আপডেট (প্যান্ট, শার্ট এবং জুতার তথ্যের জন্য ফিল্ড যোগ করা হয়েছে)
 const orderSchema = new mongoose.Schema({
   customerName: String,
   phoneNumber: String,
   address: String,
-  pantInfo: String, // প্যান্টের সাইজ ও কালার
-  shirtInfo: String, // শার্টের সাইজ ও কালার
-  shoeInfo: String,  // জুতার সাইজ ও কালার
+  pantInfo: String,
+  shirtInfo: String,
+  shoeInfo: String,
   items: Array,
   totalAmount: Number,
   date: { type: Date, default: Date.now }
@@ -71,14 +71,19 @@ app.get("/api/products", async (req, res) => {
   }
 });
 
-// ২. নতুন প্রোডাক্ট অ্যাড করা (Admin Panel)
+// ২. নতুন প্রোডাক্ট অ্যাড করা (Admin Panel) - সংশোধন করা হয়েছে
 app.post("/api/products", upload.single("image"), async (req, res) => {
   try {
+    // এখানে আপনার Render-এর অনলাইন লিঙ্কটি দেওয়া হয়েছে
+    const onlineUrl = "https://sb-brand-shop.onrender.com";
+    
     const newProduct = new Product({
       name: req.body.name,
       price: req.body.price,
-      image: req.file ? `http://localhost:3000/uploads/${req.file.filename}` : ""
+      // লোকালহোস্টের বদলে অনলাইন লিঙ্ক সেভ হবে
+      image: req.file ? `${onlineUrl}/uploads/${req.file.filename}` : "" 
     });
+    
     await newProduct.save();
     res.status(201).json({ message: "Product added successfully", product: newProduct });
   } catch (err) {
@@ -96,7 +101,7 @@ app.delete("/api/products/:id", async (req, res) => {
   }
 });
 
-// ৪. নতুন অর্ডার সেভ করা (order.html থেকে আসবে)
+// ৪. নতুন অর্ডার সেভ করা
 app.post("/api/orders", async (req, res) => {
   try {
     const newOrder = new Order(req.body);
@@ -107,17 +112,17 @@ app.post("/api/orders", async (req, res) => {
   }
 });
 
-// ৫. সব অর্ডার দেখা (orders.html বা Admin এর জন্য)
+// ৫. সব অর্ডার দেখা
 app.get("/api/orders", async (req, res) => {
   try {
-    const orders = await Order.find().sort({ date: -1 }); // নতুন অর্ডার সবার উপরে
+    const orders = await Order.find().sort({ date: -1 });
     res.status(200).json(orders);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// ৬. অর্ডার ডিলিট বা কমপ্লিট করা
+// ৬. অর্ডার ডিলিট করা
 app.delete("/api/orders/:id", async (req, res) => {
   try {
     await Order.findByIdAndDelete(req.params.id);
@@ -128,7 +133,8 @@ app.delete("/api/orders/:id", async (req, res) => {
 });
 
 // ================= SERVER START =================
-const PORT = 3000;
+// Render এ হোস্ট করার জন্য process.env.PORT জরুরি
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });

@@ -21,7 +21,6 @@
     .btn-add { background: #2ecc71; color: white; }
     .btn-banner { background: #3498db; color: white; }
     
-    /* আলাদা পেজে যাওয়ার বাটন */
     .btn-order-nav { 
       background: #f39c12; 
       color: white; 
@@ -31,6 +30,9 @@
       text-decoration: none;
       display: block;
       text-align: center;
+      line-height: 50px;
+      border-radius: 6px;
+      font-weight: bold;
     }
 
     .btn-delete { background: #ff4d4d; color: white; padding: 6px 12px; border-radius: 4px; font-size: 13px; }
@@ -66,15 +68,15 @@
 
   <div class="admin-section">
     <h3>📜 Live Product List</h3>
-    <div id="adminProductList">
-      </div>
+    <div id="adminProductList">Loading products...</div>
   </div>
 </div>
 
 <script>
-  const API_BASE = "https://sb-brand-shop.onrender.com";
+  // ব্যাকএন্ড লিঙ্ক ঠিক করা হয়েছে
+  const API_BASE = "https://sb-brand-shop.onrender.com/api";
 
-  // ব্যানার আপলোড
+  // ব্যানার আপলোড (লোকাল স্টোরেজে সেভ হবে)
   async function uploadBanner() {
     const fileInput = document.getElementById("bannerFile");
     if (fileInput.files.length === 0) return alert("ছবি সিলেক্ট করুন!");
@@ -82,12 +84,12 @@
     const reader = new FileReader();
     reader.onload = function(e) {
       localStorage.setItem("adminBanner", e.target.result);
-      alert("ব্যানার আপডেট হয়েছে!");
+      alert("ব্যানার আপডেট হয়েছে! আপনার শপ পেজে এখন এটি দেখা যাবে।");
     };
     reader.readAsDataURL(fileInput.files[0]);
   }
 
-  // প্রোডাক্ট আপলোড
+  // প্রোডাক্ট আপলোড (সার্ভারে সেভ হবে)
   async function uploadProduct() {
     const name = document.getElementById("pName").value;
     const price = document.getElementById("pPrice").value;
@@ -101,18 +103,41 @@
     formData.append("image", fileInput.files[0]);
 
     try {
-      const res = await fetch(`${API_BASE}/products`, { method: "POST", body: formData });
-      if (res.ok) { alert("প্রোডাক্ট যোগ হয়েছে!"); loadProducts(); }
-    } catch (err) { alert("সার্ভার কানেকশন নেই!"); }
+      // লিঙ্ক সংশোধন করা হয়েছে: API_BASE এর সাথে /products যোগ করা হয়েছে
+      const res = await fetch(`${API_BASE}/products`, { 
+        method: "POST", 
+        body: formData 
+      });
+      
+      if (res.ok) { 
+        alert("প্রোডাক্ট যোগ হয়েছে!"); 
+        document.getElementById("pName").value = "";
+        document.getElementById("pPrice").value = "";
+        fileInput.value = "";
+        loadProducts(); 
+      } else {
+        alert("প্রোডাক্ট যোগ করতে সমস্যা হয়েছে!");
+      }
+    } catch (err) { 
+      alert("সার্ভার কানেকশন নেই! ৩০ সেকেন্ড অপেক্ষা করে আবার চেষ্টা করুন।"); 
+    }
   }
 
   // প্রোডাক্ট লিস্ট লোড
   async function loadProducts() {
     try {
       const res = await fetch(`${API_BASE}/products`);
+      if (!res.ok) throw new Error("Network response was not ok");
+      
       const products = await res.json();
       const list = document.getElementById("adminProductList");
       list.innerHTML = "";
+      
+      if (products.length === 0) {
+        list.innerHTML = "কোনো প্রোডাক্ট পাওয়া যায়নি।";
+        return;
+      }
+
       products.forEach(p => {
         const div = document.createElement("div");
         div.className = "product-item";
@@ -125,16 +150,28 @@
         `;
         list.appendChild(div);
       });
-    } catch (e) { console.log("Error"); }
-  }
-
-  async function deleteProduct(id) {
-    if(confirm("ডিলিট করতে চান?")) {
-      await fetch(`${API_BASE}/products/${id}`, { method: "DELETE" });
-      loadProducts();
+    } catch (e) { 
+      document.getElementById("adminProductList").innerHTML = "প্রোডাক্ট লোড হচ্ছে না। সার্ভার জাগানোর জন্য কিছুক্ষণ অপেক্ষা করে রিফ্রেশ দিন।";
+      console.log("Error loading products:", e); 
     }
   }
 
+  // প্রোডাক্ট ডিলিট করা
+  async function deleteProduct(id) {
+    if(confirm("আপনি কি নিশ্চিতভাবে এই প্রোডাক্টটি ডিলিট করতে চান?")) {
+      try {
+        const res = await fetch(`${API_BASE}/products/${id}`, { method: "DELETE" });
+        if (res.ok) {
+          alert("ডিলিট সফল হয়েছে!");
+          loadProducts();
+        }
+      } catch (err) {
+        alert("ডিলিট করা সম্ভব হয়নি।");
+      }
+    }
+  }
+
+  // পেজ লোড হওয়ার পর প্রোডাক্ট লিস্ট আনা
   window.onload = loadProducts;
 </script>
 </body>
