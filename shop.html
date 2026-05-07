@@ -157,7 +157,7 @@
   <script>
     // ১. প্রোডাক্ট লোড করার ফাংশন
     function loadProducts() {
-      fetch("http://localhost:3000/api/products")
+      fetch("https://sb-brand-shop.onrender.com")
         .then(res => res.json())
         .then(products => {
           const container = document.getElementById("products");

@@ -121,7 +121,7 @@
         orderDate: new Date().toLocaleString()
       };
 
-      fetch("http://localhost:3000/api/orders", {
+      fetch("https://sb-brand-shop.onrender.com", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(orderData)
