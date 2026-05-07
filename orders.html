@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customer Orders - SB Brand Shop</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; margin: 0; padding: 20px; }
+    .container { max-width: 1200px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .header-area { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 20px; margin-bottom: 20px; }
+    h2 { margin: 0; color: #333; }
+    .btn-back { background: #34495e; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 14px; }
+    
+    .table-responsive { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; background: #fff; }
+    th, td { border: 1px solid #eee; padding: 12px; text-align: left; font-size: 13px; }
+    th { background-color: #f8f9fa; color: #333; font-weight: bold; }
+    tr:hover { background-color: #f9f9f9; }
+
+    .ordered-item { background: #eef2f3; padding: 3px 8px; border-radius: 4px; font-size: 11px; display: inline-block; margin: 2px; border: 1px solid #ddd; }
+    .info-tag { font-size: 11px; color: #555; display: block; margin-top: 4px; line-height: 1.4; }
+    .btn-delete { background: #27ae60; color: white; border: none; padding: 8px 14px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+    .btn-delete:hover { background: #219150; }
+    .no-orders { text-align: center; padding: 40px; color: #7f8c8d; font-size: 16px; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header-area">
+    <h2>🛒 Received Customer Orders</h2>
+    <a href="admin.html" class="btn-back">⬅ Back to Admin</a>
+  </div>
+
+  <div class="table-responsive">
+    <table>
+      <thead>
+        <tr>
+          <th>Customer Info</th>
+          <th>Phone Number</th>
+          <th>Shipping Address</th>
+          <th>Measurements (Size/Color)</th>
+          <th>Ordered Items</th>
+          <th>Total</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="orderTableBody"></tbody>
+    </table>
+    <div id="noOrdersMessage" class="no-orders" style="display: none;">No orders received yet!</div>
+  </div>
+</div>
+
+<script>
+  const API_BASE = "http://localhost:3000/api";
+
+  async function loadOrders() {
+    const tbody = document.getElementById("orderTableBody");
+    const noOrdersMsg = document.getElementById("noOrdersMessage");
+    
+    try {
+      const res = await fetch(`${API_BASE}/orders`);
+      
+      if (!res.ok) {
+        throw new Error("সার্ভার ডাটা পাঠাতে পারছে না!");
+      }
+
+      const orders = await res.json();
+      tbody.innerHTML = "";
+
+      if (!orders || orders.length === 0) {
+        noOrdersMsg.style.display = "block";
+        return;
+      } else {
+        noOrdersMsg.style.display = "none";
+      }
+
+      orders.forEach(order => {
+        const tr = document.createElement("tr");
+        
+        const address = order.address || "N/A";
+        
+        // প্যান্ট, শার্ট এবং জুতার তথ্য দেখানোর ফরম্যাট
+        const measurementsHTML = `
+          <div class="info-tag"><b>👖 Pant:</b> ${order.pantInfo || 'N/A'}</div>
+          <div class="info-tag"><b>👕 Shirt:</b> ${order.shirtInfo || 'N/A'}</div>
+          <div class="info-tag"><b>👟 Shoe:</b> ${order.shoeInfo || 'N/A'}</div>
+        `;
+
+        const itemsHTML = order.items && order.items.length > 0 
+          ? order.items.map(item => `<span class="ordered-item">${item.name}</span>`).join("")
+          : "পণ্য পাওয়া যায়নি";
+
+        tr.innerHTML = `
+          <td><b>${order.customerName || 'নাম নেই'}</b></td>
+          <td>${order.phoneNumber || 'নম্বর নেই'}</td>
+          <td>${address}</td>
+          <td>${measurementsHTML}</td>
+          <td>${itemsHTML}</td>
+          <td><b style="color: #27ae60;">${order.totalAmount || 0} ৳</b></td>
+          <td>
+            <button class="btn-delete" onclick="completeOrder('${order._id}')">Done</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    } catch (err) {
+      console.error("Error loading orders:", err);
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:red;">সার্ভার চালু নেই অথবা ডাটা পাওয়া যাচ্ছে না!</td></tr>`;
+    }
+  }
+
+  async function completeOrder(id) {
+    if (confirm("অর্ডারটি কি কমপ্লিট হয়েছে? এটি লিস্ট থেকে মুছে যাবে।")) {
+      try {
+        const res = await fetch(`${API_BASE}/orders/${id}`, { method: "DELETE" });
+        if (res.ok) {
+          alert("অর্ডারটি সফলভাবে সম্পন্ন হয়েছে!");
+          loadOrders();
+        } else {
+          alert("ডিলিট করতে সমস্যা হয়েছে!");
+        }
+      } catch (err) {
+        console.error("Delete error:", err);
+      }
+    }
+  }
+
+  window.onload = loadOrders;
+</script>
+
+</body>
+</html>

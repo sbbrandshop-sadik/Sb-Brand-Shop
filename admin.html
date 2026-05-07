@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SB Brand Admin Panel</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; padding: 20px; }
+    .container { max-width: 1000px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    h2 { text-align: center; color: #333; margin-bottom: 25px; }
+    
+    .admin-section { border-bottom: 2px solid #eee; padding-bottom: 30px; margin-bottom: 30px; }
+    h3 { font-size: 19px; color: #444; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+
+    .input-group { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; align-items: center; }
+    input[type="text"], input[type="number"], input[type="file"] { 
+      padding: 12px; border: 1px solid #ddd; border-radius: 6px; flex: 1; outline: none;
+    }
+    
+    button { padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+    .btn-add { background: #2ecc71; color: white; }
+    .btn-banner { background: #3498db; color: white; }
+    
+    /* আলাদা পেজে যাওয়ার বাটন */
+    .btn-order-nav { 
+      background: #f39c12; 
+      color: white; 
+      margin-bottom: 20px; 
+      width: 100%; 
+      font-size: 16px; 
+      text-decoration: none;
+      display: block;
+      text-align: center;
+    }
+
+    .btn-delete { background: #ff4d4d; color: white; padding: 6px 12px; border-radius: 4px; font-size: 13px; }
+
+    .product-item { display: flex; align-items: center; justify-content: space-between; background: #fafafa; padding: 12px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #eee; }
+    .product-item img { width: 60px; height: 60px; object-fit: cover; border-radius: 5px; background: #ddd; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>🔥 SB Brand Admin Panel</h2>
+
+  <a href="orders.html" class="btn-order-nav">🛒 View Customer Orders (Open New Page)</a>
+
+  <div class="admin-section">
+    <h3>🖼️ Update Shop Banner (Upload File)</h3>
+    <div class="input-group">
+      <input type="file" id="bannerFile" accept="image/*">
+      <button class="btn-banner" onclick="uploadBanner()">Update Banner</button>
+    </div>
+  </div>
+
+  <div class="admin-section">
+    <h3>📦 Add New Product</h3>
+    <div class="input-group">
+      <input type="text" id="pName" placeholder="Product Name">
+      <input type="number" id="pPrice" placeholder="Price (BDT)">
+      <input type="file" id="pFile" accept="image/*">
+      <button class="btn-add" onclick="uploadProduct()">Add Product</button>
+    </div>
+  </div>
+
+  <div class="admin-section">
+    <h3>📜 Live Product List</h3>
+    <div id="adminProductList">
+      </div>
+  </div>
+</div>
+
+<script>
+  const API_BASE = "http://localhost:3000/api";
+
+  // ব্যানার আপলোড
+  async function uploadBanner() {
+    const fileInput = document.getElementById("bannerFile");
+    if (fileInput.files.length === 0) return alert("ছবি সিলেক্ট করুন!");
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      localStorage.setItem("adminBanner", e.target.result);
+      alert("ব্যানার আপডেট হয়েছে!");
+    };
+    reader.readAsDataURL(fileInput.files[0]);
+  }
+
+  // প্রোডাক্ট আপলোড
+  async function uploadProduct() {
+    const name = document.getElementById("pName").value;
+    const price = document.getElementById("pPrice").value;
+    const fileInput = document.getElementById("pFile");
+
+    if (!name || !price || fileInput.files.length === 0) return alert("সব তথ্য দিন!");
+
+    const formData = new FormData();
+    formData.append("name", name);
+    formData.append("price", price);
+    formData.append("image", fileInput.files[0]);
+
+    try {
+      const res = await fetch(`${API_BASE}/products`, { method: "POST", body: formData });
+      if (res.ok) { alert("প্রোডাক্ট যোগ হয়েছে!"); loadProducts(); }
+    } catch (err) { alert("সার্ভার কানেকশন নেই!"); }
+  }
+
+  // প্রোডাক্ট লিস্ট লোড
+  async function loadProducts() {
+    try {
+      const res = await fetch(`${API_BASE}/products`);
+      const products = await res.json();
+      const list = document.getElementById("adminProductList");
+      list.innerHTML = "";
+      products.forEach(p => {
+        const div = document.createElement("div");
+        div.className = "product-item";
+        div.innerHTML = `
+          <div style="display:flex; align-items:center; gap:15px;">
+            <img src="${p.image}" onerror="this.src='https://via.placeholder.com/60'">
+            <div><strong>${p.name}</strong><br><small>${p.price} BDT</small></div>
+          </div>
+          <button class="btn-delete" onclick="deleteProduct('${p._id}')">Delete</button>
+        `;
+        list.appendChild(div);
+      });
+    } catch (e) { console.log("Error"); }
+  }
+
+  async function deleteProduct(id) {
+    if(confirm("ডিলিট করতে চান?")) {
+      await fetch(`${API_BASE}/products/${id}`, { method: "DELETE" });
+      loadProducts();
+    }
+  }
+
+  window.onload = loadProducts;
+</script>
+</body>
+</html>

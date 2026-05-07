@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SB Brand Shop</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f9f9f9;
+    }
+
+    /* NAVBAR */
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 5%;
+      background: black;
+      color: white;
+    }
+
+    .nav-buttons button {
+      margin-left: 10px;
+      padding: 8px 15px;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+      font-weight: bold;
+    }
+
+    .cart-btn { background: blue; color: white; }
+    .login-btn { background: green; color: white; }
+
+    /* BANNER AREA */
+    .banner-section {
+      margin: 30px 5%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      gap: 2in; /* ২ ইঞ্চি গ্যাপ */
+    }
+
+    .banner-box {
+      flex: 1; /* দুটি বক্স একদম সমান */
+      height: 280px;
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .banner-left { background: #222; }
+    .banner-left img { width: 100%; height: 100%; object-fit: cover; }
+
+    .banner-right {
+      background: linear-gradient(135deg, #111, #444);
+      padding: 20px;
+      flex-direction: column;
+      text-align: center;
+      color: white;
+    }
+
+    /* মাঝখানের ১ ইঞ্চি বৃত্তাকার লোগো */
+    .middle-logo {
+      position: absolute;
+      width: 1in; 
+      height: 1in;
+      background: #ffcc00;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 5;
+      border: 5px solid white;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      font-weight: bold;
+      color: black;
+      font-size: 14px;
+      text-align: center;
+    }
+
+    .banner-right h1 { font-size: 24px; margin: 0; color: #ffcc00; }
+    .banner-right p { font-size: 16px; margin-top: 10px; }
+
+    /* PRODUCT GRID - ৬টি করে */
+    .section-title { margin: 30px 5% 15px 5%; font-size: 22px; font-weight: bold; }
+
+    #products {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 15px;
+      padding: 0 5% 40px 5%;
+    }
+
+    .card {
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transition: 0.3s;
+    }
+    .card:hover { transform: translateY(-5px); }
+
+    .card img { width: 100%; height: 150px; object-fit: cover; border-radius: 5px; }
+
+    .add-btn {
+      width: 100%;
+      background: black;
+      color: white;
+      border: none;
+      padding: 8px;
+      margin-top: 10px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    @media (max-width: 1200px) { #products { grid-template-columns: repeat(4, 1fr); } }
+    @media (max-width: 768px) { 
+      #products { grid-template-columns: repeat(2, 1fr); } 
+      .banner-section { flex-direction: column; gap: 20px; }
+      .middle-logo { display: none; }
+      .banner-box { width: 100%; height: 200px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="navbar">
+    <div style="font-size: 20px; font-weight: bold;">SB Brand Shop</div>
+    <div class="nav-buttons">
+      <a href="login.html"><button class="login-btn">Login</button></a>
+      <a href="cart.html"><button class="cart-btn">Go Cart</button></a>
+    </div>
+  </div>
+
+  <div class="banner-section">
+    <div class="middle-logo">SB<br>LOGO</div>
+    <div class="banner-box banner-left">
+      <img id="bannerImg" src="image_2776b5.jpg" alt="Shop Banner" onerror="this.src='https://via.placeholder.com/600x300?text=Admin+Image'">
+    </div>
+    <div class="banner-box banner-right">
+      <h1>🔥 Welcome to SB Brand Shop</h1>
+      <p>Best Bags & Fashion Products for You</p>
+    </div>
+  </div>
+
+  <div class="section-title">📦 All Products</div>
+  <div id="products"></div>
+
+  <script>
+    // ১. প্রোডাক্ট লোড করার ফাংশন
+    function loadProducts() {
+      fetch("http://localhost:3000/api/products")
+        .then(res => res.json())
+        .then(products => {
+          const container = document.getElementById("products");
+          container.innerHTML = "";
+          
+          if(!products || products.length === 0) {
+            container.innerHTML = "<p>No products found.</p>";
+            return;
+          }
+
+          products.forEach(p => {
+            const div = document.createElement("div");
+            div.className = "card";
+            div.innerHTML = `
+              <img src="${p.image}" alt="${p.name}" onerror="this.src='https://via.placeholder.com/150'">
+              <h3>${p.name}</h3>
+              <p style="color: green; font-weight: bold;">${p.price} BDT</p>
+              <button class="add-btn" onclick="addToCart('${p.name}', ${p.price}, '${p.image}')">Add to Cart</button>
+            `;
+            container.appendChild(div);
+          });
+        })
+        .catch(err => {
+          console.error("Error loading products:", err);
+          document.getElementById("products").innerHTML = "<p>Error loading products. Make sure your server is running.</p>";
+        });
+    }
+
+    // ২. অ্যাড টু কার্ট ফাংশন (ইমেজসহ সেভ করবে)
+    function addToCart(name, price, image) {
+      let cart = JSON.parse(localStorage.getItem("cart")) || [];
+      
+      const product = {
+        name: name,
+        price: price,
+        image: image // ছবি সেভ হচ্ছে
+      };
+
+      cart.push(product);
+      localStorage.setItem("cart", JSON.stringify(cart));
+      alert(name + " কার্টে যোগ করা হয়েছে!");
+    }
+
+    // ৩. পেজ লোড হওয়ার সাথে সাথে সব ফাংশন চালু করা
+    document.addEventListener("DOMContentLoaded", function() {
+      const savedImg = localStorage.getItem("adminBanner");
+      if (savedImg) {
+        document.getElementById("bannerImg").src = savedImg;
+      }
+      loadProducts();
+    });
+  </script>
+</body>
+</html>

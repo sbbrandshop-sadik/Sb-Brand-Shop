@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Complete Your Order - SB Brand Shop</title>
+  <style>
+    body { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; background: #f4f7f6; }
+    .navbar { background: black; color: white; padding: 15px 5%; text-align: center; font-size: 20px; font-weight: bold; }
+    .order-container { max-width: 500px; margin: 40px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    h2 { text-align: center; color: #333; margin-bottom: 25px; }
+    .form-group { margin-bottom: 15px; }
+    label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
+    input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; outline: none; transition: 0.3s; }
+    input:focus { border-color: #2ecc71; }
+    
+    .optional-section { background: #f9f9f9; padding: 15px; border-radius: 8px; margin-top: 20px; border: 1px dashed #ccc; }
+    .optional-title { font-size: 14px; font-weight: bold; color: #27ae60; margin-bottom: 10px; display: block; }
+    .flex-group { display: flex; gap: 10px; margin-bottom: 10px; }
+    
+    .confirm-btn { width: 100%; background: #2ecc71; color: white; border: none; padding: 15px; margin-top: 20px; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+    .confirm-btn:hover { background: #27ae60; }
+    .back-link { display: block; text-align: center; margin-top: 15px; color: #777; text-decoration: none; }
+  </style>
+</head>
+<body>
+
+  <div class="navbar">SB Brand Shop</div>
+
+  <div class="order-container">
+    <h2>🚚 Shipping Details</h2>
+    
+    <div class="form-group">
+      <label>Full Name</label>
+      <input type="text" id="custName" placeholder="আপনার নাম লিখুন" required>
+    </div>
+
+    <div class="form-group">
+      <label>Phone Number</label>
+      <input type="text" id="custNumber" placeholder="আপনার মোবাইল নাম্বার" required>
+    </div>
+
+    <div class="form-group">
+      <label>District (জেলা)</label>
+      <input type="text" id="custDistrict" placeholder="আপনার জেলার নাম" required>
+    </div>
+
+    <div class="form-group">
+      <label>Thana (থানা)</label>
+      <input type="text" id="custThana" placeholder="আপনার থানার নাম" required>
+    </div>
+
+    <div class="form-group">
+      <label>Village / Area (গ্রাম/মহল্লা)</label>
+      <input type="text" id="custVillage" placeholder="আপনার গ্রাম বা এলাকার নাম" required>
+    </div>
+
+    <div class="optional-section">
+      <span class="optional-title">অতিরিক্ত তথ্য (প্রয়োজন হলে লিখুন)</span>
+      
+      <label style="font-size: 13px;">👖 প্যান্টের জন্য:</label>
+      <div class="flex-group">
+        <input type="text" id="pantSize" placeholder="কোমরের সাইজ">
+        <input type="text" id="pantColor" placeholder="কালার">
+      </div>
+
+      <label style="font-size: 13px;">👕 শার্টের জন্য:</label>
+      <div class="flex-group">
+        <input type="text" id="shirtSize" placeholder="সাইজ (M, L, XL)">
+        <input type="text" id="shirtColor" placeholder="কালার">
+      </div>
+
+      <label style="font-size: 13px;">👟 জুতার জন্য:</label>
+      <div class="flex-group">
+        <input type="text" id="shoeSize" placeholder="জুতার সাইজ (৩৯, ৪০, ৪১...)">
+        <input type="text" id="shoeColor" placeholder="কালার">
+      </div>
+    </div>
+
+    <button class="confirm-btn" onclick="submitOrder()">Confirm Order</button>
+    <a href="cart.html" class="back-link">Back to Cart</a>
+  </div>
+
+  <script>
+    function submitOrder() {
+      const name = document.getElementById("custName").value;
+      const number = document.getElementById("custNumber").value;
+      const district = document.getElementById("custDistrict").value;
+      const thana = document.getElementById("custThana").value;
+      const village = document.getElementById("custVillage").value;
+
+      // ঐচ্ছিক ডাটা সংগ্রহ
+      const pantSize = document.getElementById("pantSize").value || "N/A";
+      const pantColor = document.getElementById("pantColor").value || "N/A";
+      const shirtSize = document.getElementById("shirtSize").value || "N/A";
+      const shirtColor = document.getElementById("shirtColor").value || "N/A";
+      const shoeSize = document.getElementById("shoeSize").value || "N/A";
+      const shoeColor = document.getElementById("shoeColor").value || "N/A";
+
+      const cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+      if (!name || !number || !district || !thana || !village) {
+        alert("অনুগ্রহ করে সব তথ্য সঠিকভাবে দিন!");
+        return;
+      }
+
+      if (cart.length === 0) {
+        alert("আপনার কার্ট খালি!");
+        return;
+      }
+
+      const orderData = {
+        customerName: name,
+        phoneNumber: number,
+        address: `${village}, ${thana}, ${district}`,
+        pantInfo: `Size: ${pantSize}, Color: ${pantColor}`,
+        shirtInfo: `Size: ${shirtSize}, Color: ${shirtColor}`,
+        shoeInfo: `Size: ${shoeSize}, Color: ${shoeColor}`, // নতুন জুতার তথ্য
+        items: cart,
+        totalAmount: cart.reduce((sum, item) => sum + Number(item.price), 0),
+        orderDate: new Date().toLocaleString()
+      };
+
+      fetch("http://localhost:3000/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(orderData)
+      })
+      .then(res => {
+        if (res.ok) {
+          alert("অর্ডার সফলভাবে গ্রহণ করা হয়েছে!");
+          localStorage.removeItem("cart");
+          window.location.href = "shop.html";
+        } else {
+          alert("অর্ডার দিতে সমস্যা হয়েছে।");
+        }
+      })
+      .catch(err => alert("সার্ভারের সাথে যোগাযোগ করা যাচ্ছে না!"));
+    }
+  </script>
+</body>
+</html>
