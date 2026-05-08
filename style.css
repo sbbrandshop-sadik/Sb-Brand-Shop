@@ -1,40 +1,66 @@
+*/ General Styles */
 body {
   margin: 0;
-  font-family: Arial;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #f9f9f9;
 }
 
-header {
-  background: black;
-  color: white;
-  padding: 15px;
+/* NAVBAR */
+.navbar {
   display: flex;
   justify-content: space-between;
-}
-
-nav a {
-  color: white;
-  margin: 0 10px;
-  text-decoration: none;
-}
-
-.hero {
-  height: 80vh;
-  background: url('https://via.placeholder.com/1500') center/cover;
-  color: white;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
   align-items: center;
+  padding: 15px 5%;
+  background: black;
+  color: white;
 }
+
+/* BANNER AREA - Mobile Responsive */
+.banner-section {
+  margin: 20px 5%;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.shop-banner {
+  width: 100%;
+  height: auto;
+  min-height: 200px; /* Mobiler jonno */
+  object-fit: cover;
+  display: block;
+}
+
+/* WELCOME SECTION - Premium Look */
+.welcome-section {
+  text-align: center;
+  padding: 40px 20px;
+  background: linear-gradient(135deg, #1a1a1a, #4a4a4a);
+  color: white;
+  margin: 20px 5%;
+  border-radius: 15px;
+}
+
+.welcome-section h1 {
+  font-size: 24px;
+  margin: 0;
+  letter-spacing: 1px;
+}
+
+.welcome-section p {
+  opacity: 0.8;
+  font-size: 14px;
+}
+
+/* Product Grid */
 .grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-  padding: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 15px;
+  padding: 20px 5%;
 }
 
-.card {
-  border: 1px solid #ddd;
-  padding: 10px;
-  text-align: center;
+@media (min-width: 768px) {
+  .welcome-section h1 { font-size: 40px; }
+  .shop-banner { min-height: 400px; }
 }
