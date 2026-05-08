@@ -5,23 +5,30 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Customer Orders - SB Brand Shop</title>
   <style>
-    body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; margin: 0; padding: 20px; }
-    .container { max-width: 1200px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
-    .header-area { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 20px; margin-bottom: 20px; }
-    h2 { margin: 0; color: #333; }
-    .btn-back { background: #34495e; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 14px; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; margin: 0; padding: 15px; }
+    .container { max-width: 1200px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .header-area { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 20px; }
+    h2 { margin: 0; color: #2c3e50; font-size: 22px; }
+    .btn-back { background: #34495e; color: white; padding: 10px 18px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 13px; transition: 0.3s; }
+    .btn-back:hover { background: #2c3e50; }
     
     .table-responsive { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; background: #fff; }
+    table { width: 100%; border-collapse: collapse; background: #fff; min-width: 900px; }
     th, td { border: 1px solid #eee; padding: 12px; text-align: left; font-size: 13px; }
-    th { background-color: #f8f9fa; color: #333; font-weight: bold; }
-    tr:hover { background-color: #f9f9f9; }
+    th { background-color: #f8f9fa; color: #333; font-weight: bold; position: sticky; top: 0; }
+    tr:nth-child(even) { background-color: #fdfdfd; }
+    tr:hover { background-color: #f1f4f6; }
 
-    .ordered-item { background: #eef2f3; padding: 3px 8px; border-radius: 4px; font-size: 11px; display: inline-block; margin: 2px; border: 1px solid #ddd; }
-    .info-tag { font-size: 11px; color: #555; display: block; margin-top: 4px; line-height: 1.4; }
-    .btn-delete { background: #27ae60; color: white; border: none; padding: 8px 14px; border-radius: 5px; cursor: pointer; font-weight: bold; }
-    .btn-delete:hover { background: #219150; }
-    .no-orders { text-align: center; padding: 40px; color: #7f8c8d; font-size: 16px; }
+    .ordered-item { background: #eef2f3; padding: 4px 8px; border-radius: 4px; font-size: 11px; display: inline-block; margin: 2px; border: 1px solid #d1d8dd; font-weight: 500; }
+    .info-tag { font-size: 11px; color: #444; margin-top: 5px; line-height: 1.5; padding: 2px 0; border-bottom: 1px dashed #eee; }
+    .info-tag b { color: #2c3e50; }
+    
+    .btn-delete { background: #27ae60; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 12px; transition: 0.3s; }
+    .btn-delete:hover { background: #219150; transform: translateY(-1px); }
+    
+    .status-msg { text-align: center; padding: 50px; color: #7f8c8d; font-size: 15px; }
+    .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
@@ -39,31 +46,38 @@
           <th>Customer Info</th>
           <th>Phone Number</th>
           <th>Shipping Address</th>
-          <th>Measurements (Size/Color)</th>
+          <th>Specific Details (Size/Color)</th>
           <th>Ordered Items</th>
-          <th>Total</th>
+          <th>Total Payable</th>
           <th>Action</th>
         </tr>
       </thead>
-      <tbody id="orderTableBody"></tbody>
+      <tbody id="orderTableBody">
+        <tr>
+          <td colspan="7" class="status-msg">
+            <div class="loader"></div>
+            সার্ভার থেকে ডাটা লোড হচ্ছে...
+          </td>
+        </tr>
+      </tbody>
     </table>
-    <div id="noOrdersMessage" class="no-orders" style="display: none;">No orders received yet!</div>
+    <div id="noOrdersMessage" class="status-msg" style="display: none;">এখন পর্যন্ত কোনো অর্ডার পাওয়া যায়নি!</div>
   </div>
 </div>
 
 <script>
-  const API_BASE = "https://sb-brand-shop.onrender.com";
+  // আপনার রেন্ডার ব্যাকএন্ড লিঙ্ক
+  const API_BASE = "https://sb-brand-shop.onrender.com/api"; 
 
   async function loadOrders() {
     const tbody = document.getElementById("orderTableBody");
     const noOrdersMsg = document.getElementById("noOrdersMessage");
     
     try {
+      // রেন্ডার সার্ভারে রিকোয়েস্ট পাঠানো
       const res = await fetch(`${API_BASE}/orders`);
       
-      if (!res.ok) {
-        throw new Error("সার্ভার ডাটা পাঠাতে পারছে না!");
-      }
+      if (!res.ok) throw new Error("Data fetching failed");
 
       const orders = await res.json();
       tbody.innerHTML = "";
@@ -75,29 +89,32 @@
         noOrdersMsg.style.display = "none";
       }
 
-      orders.forEach(order => {
+      // অর্ডারগুলোকে উল্টোভাবে দেখানো (নতুন অর্ডার উপরে থাকবে)
+      orders.reverse().forEach(order => {
         const tr = document.createElement("tr");
         
-        const address = order.address || "N/A";
+        // অ্যাড্রেস ফরম্যাটিং
+        const address = order.address || "ঠিকানা দেওয়া হয়নি";
         
-        // প্যান্ট, শার্ট এবং জুতার তথ্য দেখানোর ফরম্যাট
+        // বিস্তারিত তথ্য (প্যান্ট, শার্ট, জুতা)
         const measurementsHTML = `
           <div class="info-tag"><b>👖 Pant:</b> ${order.pantInfo || 'N/A'}</div>
           <div class="info-tag"><b>👕 Shirt:</b> ${order.shirtInfo || 'N/A'}</div>
           <div class="info-tag"><b>👟 Shoe:</b> ${order.shoeInfo || 'N/A'}</div>
         `;
 
+        // অর্ডার করা পণ্যের নাম
         const itemsHTML = order.items && order.items.length > 0 
           ? order.items.map(item => `<span class="ordered-item">${item.name}</span>`).join("")
-          : "পণ্য পাওয়া যায়নি";
+          : "<span style='color:red;'>পণ্য পাওয়া যায়নি</span>";
 
         tr.innerHTML = `
           <td><b>${order.customerName || 'নাম নেই'}</b></td>
-          <td>${order.phoneNumber || 'নম্বর নেই'}</td>
-          <td>${address}</td>
+          <td><a href="tel:${order.phoneNumber}" style="text-decoration:none; color:#2980b9;">${order.phoneNumber || 'N/A'}</a></td>
+          <td style="max-width: 200px;">${address}</td>
           <td>${measurementsHTML}</td>
           <td>${itemsHTML}</td>
-          <td><b style="color: #27ae60;">${order.totalAmount || 0} ৳</b></td>
+          <td><b style="color: #27ae60; font-size: 15px;">${order.totalAmount || 0} ৳</b></td>
           <td>
             <button class="btn-delete" onclick="completeOrder('${order._id}')">Done</button>
           </td>
@@ -106,26 +123,34 @@
       });
     } catch (err) {
       console.error("Error loading orders:", err);
-      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:red;">সার্ভার চালু নেই অথবা ডাটা পাওয়া যাচ্ছে না!</td></tr>`;
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7" style="text-align:center; color:#e74c3c; padding: 40px;">
+            <b>⚠️ সার্ভার কানেকশন এরর!</b><br>
+            আপনার রেন্ডার সার্ভারটি চেক করুন অথবা কিছুক্ষণ পর রিফ্রেশ দিন।
+          </td>
+        </tr>`;
     }
   }
 
+  // অর্ডার সম্পন্ন হলে ডিলিট করার ফাংশন
   async function completeOrder(id) {
-    if (confirm("অর্ডারটি কি কমপ্লিট হয়েছে? এটি লিস্ট থেকে মুছে যাবে।")) {
+    if (confirm("অর্ডারটি কি ডেলিভারি হয়ে গেছে? এটি লিস্ট থেকে মুছে যাবে।")) {
       try {
         const res = await fetch(`${API_BASE}/orders/${id}`, { method: "DELETE" });
         if (res.ok) {
-          alert("অর্ডারটি সফলভাবে সম্পন্ন হয়েছে!");
-          loadOrders();
+          alert("অর্ডারটি লিস্ট থেকে সরানো হয়েছে!");
+          loadOrders(); // লিস্ট রিফ্রেশ করা
         } else {
-          alert("ডিলিট করতে সমস্যা হয়েছে!");
+          alert("মুছে ফেলতে সমস্যা হয়েছে। আবার চেষ্টা করুন।");
         }
       } catch (err) {
-        console.error("Delete error:", err);
+        alert("সার্ভার এরর! ডিলিট করা যাচ্ছে না।");
       }
     }
   }
 
+  // পেজ লোড হওয়ার সময় ফাংশনটি চালানো
   window.onload = loadOrders;
 </script>
 
