@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SB Brand Admin Panel</title>
+  <title>SB Brand Admin Panel - Professional</title>
   <style>
     body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; padding: 20px; }
     .container { max-width: 1000px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
@@ -13,32 +13,26 @@
     h3 { font-size: 19px; color: #444; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
 
     .input-group { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; align-items: center; }
-    input[type="text"], input[type="number"], input[type="file"] { 
-      padding: 12px; border: 1px solid #ddd; border-radius: 6px; flex: 1; outline: none;
+    input[type="text"], input[type="number"], input[type="file"], textarea { 
+      padding: 12px; border: 1px solid #ddd; border-radius: 6px; flex: 1; outline: none; min-width: 200px;
     }
+    textarea { width: 100%; height: 80px; resize: vertical; }
     
     button { padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; }
-    .btn-add { background: #2ecc71; color: white; }
+    .btn-add { background: #f57224; color: white; width: 100%; margin-top: 10px; font-size: 16px; }
     .btn-banner { background: #3498db; color: white; }
     
     .btn-order-nav { 
-      background: #f39c12; 
-      color: white; 
-      margin-bottom: 20px; 
-      width: 100%; 
-      font-size: 16px; 
-      text-decoration: none;
-      display: block;
-      text-align: center;
-      line-height: 50px;
-      border-radius: 6px;
-      font-weight: bold;
+      background: #f39c12; color: white; margin-bottom: 20px; width: 100%; 
+      font-size: 16px; text-decoration: none; display: block; text-align: center; 
+      line-height: 50px; border-radius: 6px; font-weight: bold;
     }
 
     .btn-delete { background: #ff4d4d; color: white; padding: 6px 12px; border-radius: 4px; font-size: 13px; }
 
     .product-item { display: flex; align-items: center; justify-content: space-between; background: #fafafa; padding: 12px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #eee; }
     .product-item img { width: 60px; height: 60px; object-fit: cover; border-radius: 5px; background: #ddd; }
+    .file-box { border: 1px dashed #bbb; padding: 10px; border-radius: 6px; background: #fff; width: 100%; }
   </style>
 </head>
 <body>
@@ -49,7 +43,7 @@
   <a href="orders.html" class="btn-order-nav">🛒 View Customer Orders (Open New Page)</a>
 
   <div class="admin-section">
-    <h3>🖼️ Update Shop Banner (Upload File)</h3>
+    <h3>🖼️ Update Shop Banner</h3>
     <div class="input-group">
       <input type="file" id="bannerFile" accept="image/*">
       <button class="btn-banner" onclick="uploadBanner()">Update Banner</button>
@@ -57,12 +51,26 @@
   </div>
 
   <div class="admin-section">
-    <h3>📦 Add New Product</h3>
+    <h3>📦 Add New Product (Daraz Style)</h3>
     <div class="input-group">
       <input type="text" id="pName" placeholder="Product Name">
-      <input type="number" id="pPrice" placeholder="Price (BDT)">
-      <input type="file" id="pFile" accept="image/*">
-      <button class="btn-add" onclick="uploadProduct()">Add Product</button>
+      <input type="number" id="pPrice" placeholder="Selling Price (BDT)">
+      <input type="number" id="pOldPrice" placeholder="Old Price / Discount Price (Optional)">
+      
+      <textarea id="pDesc" placeholder="Product Description (Size, Material, Color etc.)"></textarea>
+      
+      <div class="file-box">
+        <p style="margin: 0 0 10px 0; font-size: 14px; font-weight: bold;">Upload Images (Max 3):</p>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <input type="file" id="pFile1" accept="image/*">
+            <input type="file" id="pFile2" accept="image/*">
+            <input type="file" id="pFile3" accept="image/*">
+        </div>
+      </div>
+
+      <input type="text" id="pUrl" placeholder="Or Paste External Image URL (Optional)" style="width:100%;">
+      
+      <button class="btn-add" onclick="uploadProduct()">Add Product Now</button>
     </div>
   </div>
 
@@ -73,48 +81,53 @@
 </div>
 
 <script>
-  // ব্যাকএন্ড লিঙ্ক ঠিক করা হয়েছে
   const API_BASE = "https://sb-brand-shop.onrender.com/api";
 
-  // ব্যানার আপলোড (লোকাল স্টোরেজে সেভ হবে)
+  // ব্যানার আপডেট
   async function uploadBanner() {
     const fileInput = document.getElementById("bannerFile");
     if (fileInput.files.length === 0) return alert("ছবি সিলেক্ট করুন!");
-
     const reader = new FileReader();
     reader.onload = function(e) {
       localStorage.setItem("adminBanner", e.target.result);
-      alert("ব্যানার আপডেট হয়েছে! আপনার শপ পেজে এখন এটি দেখা যাবে।");
+      alert("ব্যানার আপডেট হয়েছে!");
     };
     reader.readAsDataURL(fileInput.files[0]);
   }
 
-  // প্রোডাক্ট আপলোড (সার্ভারে সেভ হবে)
+  // প্রোডাক্ট আপলোড
   async function uploadProduct() {
     const name = document.getElementById("pName").value;
     const price = document.getElementById("pPrice").value;
-    const fileInput = document.getElementById("pFile");
+    const oldPrice = document.getElementById("pOldPrice").value;
+    const desc = document.getElementById("pDesc").value;
+    const url = document.getElementById("pUrl").value;
+    const file1 = document.getElementById("pFile1").files[0];
+    const file2 = document.getElementById("pFile2").files[0];
+    const file3 = document.getElementById("pFile3").files[0];
 
-    if (!name || !price || fileInput.files.length === 0) return alert("সব তথ্য দিন!");
+    if (!name || !price) return alert("নাম এবং দাম অবশ্যই দিতে হবে!");
 
     const formData = new FormData();
     formData.append("name", name);
     formData.append("price", price);
-    formData.append("image", fileInput.files[0]);
+    formData.append("oldPrice", oldPrice);
+    formData.append("description", desc);
+    formData.append("externalUrl", url);
+    
+    if (file1) formData.append("images", file1);
+    if (file2) formData.append("images", file2);
+    if (file3) formData.append("images", file3);
 
     try {
-      // লিঙ্ক সংশোধন করা হয়েছে: API_BASE এর সাথে /products যোগ করা হয়েছে
       const res = await fetch(`${API_BASE}/products`, { 
         method: "POST", 
         body: formData 
       });
       
       if (res.ok) { 
-        alert("প্রোডাক্ট যোগ হয়েছে!"); 
-        document.getElementById("pName").value = "";
-        document.getElementById("pPrice").value = "";
-        fileInput.value = "";
-        loadProducts(); 
+        alert("প্রোডাক্ট সফলভাবে যোগ হয়েছে!"); 
+        location.reload(); 
       } else {
         alert("প্রোডাক্ট যোগ করতে সমস্যা হয়েছে!");
       }
@@ -123,12 +136,10 @@
     }
   }
 
-  // প্রোডাক্ট লিস্ট লোড
+  // লিস্ট লোড
   async function loadProducts() {
     try {
       const res = await fetch(`${API_BASE}/products`);
-      if (!res.ok) throw new Error("Network response was not ok");
-      
       const products = await res.json();
       const list = document.getElementById("adminProductList");
       list.innerHTML = "";
@@ -141,37 +152,38 @@
       products.forEach(p => {
         const div = document.createElement("div");
         div.className = "product-item";
+        // প্রথম ইমেজটি দেখাবে (যদি থাকে) নতুবা প্লেসহোল্ডার
+        const displayImg = p.images && p.images.length > 0 ? p.images[0] : (p.externalUrl || 'https://via.placeholder.com/60');
+        
         div.innerHTML = `
           <div style="display:flex; align-items:center; gap:15px;">
-            <img src="${p.image}" onerror="this.src='https://via.placeholder.com/60'">
-            <div><strong>${p.name}</strong><br><small>${p.price} BDT</small></div>
+            <img src="${displayImg}" onerror="this.src='https://via.placeholder.com/60'">
+            <div>
+                <strong>${p.name}</strong><br>
+                <small>${p.price} BDT ${p.oldPrice ? `<strike style="color:red; margin-left:5px;">${p.oldPrice}</strike>` : ''}</small>
+            </div>
           </div>
           <button class="btn-delete" onclick="deleteProduct('${p._id}')">Delete</button>
         `;
         list.appendChild(div);
       });
     } catch (e) { 
-      document.getElementById("adminProductList").innerHTML = "প্রোডাক্ট লোড হচ্ছে না। সার্ভার জাগানোর জন্য কিছুক্ষণ অপেক্ষা করে রিফ্রেশ দিন।";
-      console.log("Error loading products:", e); 
+      document.getElementById("adminProductList").innerHTML = "সার্ভার লোড হচ্ছে না। রিফ্রেশ দিন।";
     }
   }
 
-  // প্রোডাক্ট ডিলিট করা
   async function deleteProduct(id) {
     if(confirm("আপনি কি নিশ্চিতভাবে এই প্রোডাক্টটি ডিলিট করতে চান?")) {
       try {
         const res = await fetch(`${API_BASE}/products/${id}`, { method: "DELETE" });
         if (res.ok) {
-          alert("ডিলিট সফল হয়েছে!");
+          alert("ডিলিট সফল হয়েছে!");
           loadProducts();
         }
-      } catch (err) {
-        alert("ডিলিট করা সম্ভব হয়নি।");
-      }
+      } catch (err) { alert("ডিলিট করা সম্ভব হয়নি।"); }
     }
   }
 
-  // পেজ লোড হওয়ার পর প্রোডাক্ট লিস্ট আনা
   window.onload = loadProducts;
 </script>
 </body>
