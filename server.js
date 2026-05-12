@@ -12,15 +12,16 @@ app.use(cors());
 app.use(express.json());
 
 // ================= UPLOADS FOLDER CHECK =================
-const uploadDir = "uploads";
+const uploadDir = path.join(__dirname, "uploads");
 if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir);
+    fs.mkdirSync(uploadDir, { recursive: true });
 }
 
 // Static folder for images
-app.use("/uploads", express.static("uploads"));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // ================= MONGO DB CONNECT =================
+// আপনার ডাটাবেজ কানেকশন স্ট্রিং একদম ঠিক আছে
 mongoose.connect("mongodb+srv://Admin:sadik88007@cluster0.1rhiqfe.mongodb.net/sbbrandshop")
   .then(() => console.log("MongoDB Connected Successfully"))
   .catch(err => console.error("DB Connection Error:", err));
@@ -41,10 +42,10 @@ const upload = multer({ storage: storage });
 const productSchema = new mongoose.Schema({
   name: String,
   price: Number,
-  oldPrice: Number,      // নতুন: ডিসকাউন্টের জন্য
-  description: String,   // নতুন: প্রোডাক্ট বর্ণনা
-  images: [String],      // নতুন: ৩টি ছবির জন্য অ্যারে
-  externalUrl: String    // নতুন: বাইরের লিঙ্ক থেকে ছবি
+  oldPrice: Number,
+  description: String,
+  images: [String],
+  externalUrl: String
 });
 const Product = mongoose.model("Product", productSchema);
 
@@ -73,13 +74,11 @@ app.get("/api/products", async (req, res) => {
   }
 });
 
-// ২. নতুন প্রোডাক্ট অ্যাড করা (Update for Multi-Image)
-// এখানে upload.array("images", 3) ব্যবহার করা হয়েছে ৩টি ছবির জন্য
+// ২. নতুন প্রোডাক্ট অ্যাড করা
 app.post("/api/products", upload.array("images", 3), async (req, res) => {
   try {
-    const onlineUrl = "https://sb-brand-shop.onrender.com";
+    const onlineUrl = req.protocol + '://' + req.get('host'); // এটি অটোমেটিক রেন্ডার লিঙ্ক নিয়ে নিবে
     
-    // আপলোড করা ফাইলগুলোর লিঙ্ক তৈরি করা
     let imagePaths = [];
     if (req.files && req.files.length > 0) {
         imagePaths = req.files.map(file => `${onlineUrl}/uploads/${file.filename}`);
@@ -91,7 +90,7 @@ app.post("/api/products", upload.array("images", 3), async (req, res) => {
       oldPrice: req.body.oldPrice,
       description: req.body.description,
       externalUrl: req.body.externalUrl,
-      images: imagePaths // ৩টি ছবির লিঙ্ক অ্যারে হিসেবে থাকবে
+      images: imagePaths
     });
     
     await newProduct.save();
@@ -105,7 +104,6 @@ app.post("/api/products", upload.array("images", 3), async (req, res) => {
 app.delete("/api/products/:id", async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
-    // সার্ভার থেকে ছবিগুলো মুছে ফেলার কোড (Optional)
     if (product && product.images) {
         product.images.forEach(imgLink => {
             const fileName = imgLink.split("/").pop();
@@ -120,13 +118,15 @@ app.delete("/api/products/:id", async (req, res) => {
   }
 });
 
-// ৪. নতুন অর্ডার সেভ করা
+// ৪. নতুন অর্ডার সেভ করা (এখানেই 404 আসছিল)
 app.post("/api/orders", async (req, res) => {
   try {
+    console.log("New Order Received:", req.body); // সার্ভার লগে অর্ডার চেক করার জন্য
     const newOrder = new Order(req.body);
     await newOrder.save();
     res.status(200).json({ message: "Order placed successfully" });
   } catch (err) {
+    console.error("Order Save Error:", err.message);
     res.status(500).json({ error: err.message });
   }
 });
@@ -152,7 +152,7 @@ app.delete("/api/orders/:id", async (req, res) => {
 });
 
 // ================= SERVER START =================
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000; // Render সাধারণত 10000 পোর্ট ব্যবহার করে
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
